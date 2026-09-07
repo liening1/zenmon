@@ -13,9 +13,16 @@
 
 [Features](#-key-features) • [Installation](#-installation) • [Keybindings](#-keybindings) • [Comparison](#-why-zenmon) • [Architecture](#-universal-hardware-engine)
 
+<br/><br/>
+
+<img src="assets/demo.gif" alt="ZenMon Live Demo" width="95%" />
+
 </div>
 
 ---
+
+<details>
+<summary><b>📄 Text Layout Preview (ASCII)</b></summary>
 
 ```
 ┌────────────────────────────────────────────────────────────────────────────────────────┐
@@ -41,6 +48,7 @@
 │ [0:Main] 1:CPU 2:GPU 3:IO 4:Proc 5:Wave | [sudo]Root 1.0s [p]Snapshot [w]Wide [?]Help  │
 └────────────────────────────────────────────────────────────────────────────────────────┘
 ```
+</details>
 
 ---
 
