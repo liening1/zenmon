@@ -82,7 +82,7 @@
 
 ### Option 1: Instant Single-Line Run (Zero Installation)
 ```bash
-curl -sSL https://raw.githubusercontent.com/quantum1/zenmon/main/standalone/zenmon.py | python3
+curl -sSL https://raw.githubusercontent.com/liening1/zenmon/main/standalone/zenmon.py | python3
 ```
 
 ### Option 2: Modern Python Tooling (`uvx` or `pipx`)
@@ -91,12 +91,12 @@ curl -sSL https://raw.githubusercontent.com/quantum1/zenmon/main/standalone/zenm
 uvx zenmon
 
 # Or install globally via pipx:
-pipx install git+https://github.com/quantum1/zenmon.git
+pipx install git+https://github.com/liening1/zenmon.git
 ```
 
 ### Option 3: Manual Git Clone
 ```bash
-git clone https://github.com/quantum1/zenmon.git
+git clone https://github.com/liening1/zenmon.git
 cd zenmon
 sudo make install
 ```
