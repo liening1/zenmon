@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """ZenMon: A serene, zero-dependency telemetry TUI for modern workstations & AI rigs.
 
-GitHub: https://github.com/quantum1/zenmon
+GitHub: https://github.com/liening1/zenmon
 License: MIT
 """
 

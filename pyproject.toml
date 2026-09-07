@@ -35,9 +35,9 @@ dependencies = []
 zenmon = "zenmon.__main__:main"
 
 [project.urls]
-Homepage = "https://github.com/quantum1/zenmon"
-Repository = "https://github.com/quantum1/zenmon.git"
-Issues = "https://github.com/quantum1/zenmon/issues"
+Homepage = "https://github.com/liening1/zenmon"
+Repository = "https://github.com/liening1/zenmon.git"
+Issues = "https://github.com/liening1/zenmon/issues"
 
 [tool.setuptools.packages.find]
 where = ["."]
