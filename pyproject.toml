@@ -1,0 +1,44 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "zenmon"
+version = "2.0.0"
+description = "A serene, zero-dependency telemetry TUI for modern workstations & AI rigs."
+readme = "README.md"
+requires-python = ">=3.8"
+license = {text = "MIT"}
+authors = [
+    {name = "ZenMon Contributors"}
+]
+keywords = ["system-monitor", "telemetry", "tui", "curses", "gpu", "cuda", "vram", "ai", "llm", "htop", "btop"]
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Environment :: Console :: Curses",
+    "Intended Audience :: Developers",
+    "Intended Audience :: System Administrators",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: POSIX :: Linux",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: System :: Monitoring",
+]
+dependencies = []
+
+[project.scripts]
+zenmon = "zenmon.__main__:main"
+
+[project.urls]
+Homepage = "https://github.com/quantum1/zenmon"
+Repository = "https://github.com/quantum1/zenmon.git"
+Issues = "https://github.com/quantum1/zenmon/issues"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["zenmon*"]
