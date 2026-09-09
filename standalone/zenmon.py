@@ -1,13 +1,9 @@
 #!/usr/bin/env python3
-"""ZenMon: A serene, zero-dependency telemetry TUI for modern workstations & AI rigs.
-
-GitHub: https://github.com/liening1/zenmon
+"""ZenMon: Serene telemetry TUI
 License: MIT
 """
 
-# =====================================================================
-# SECTION 1: AI WORKLOAD INSPECTOR
-# =====================================================================
+# SECTION 1
 """zenmon.ai_inspector: 本地大模型与深度学习工作流智能感知引擎.
 
 自动识别当前系统中运行的 AI / ML / LLM 进程 (Ollama, vLLM, PyTorch, ComfyUI 等),
@@ -72,10 +68,7 @@ def analyze_ai_summary(procs: list, gpu_procs: list = None) -> dict:
         "total_vram_mb": ai_vram_mb,
     }
 
-
-# =====================================================================
-# SECTION 2: UNIVERSAL HARDWARE ABSTRACTION LAYER (HAL)
-# =====================================================================
+# SECTION 2
 """zenmon.hal: 零外部依赖通用硬件抽象层 (Universal Hardware Abstraction Layer).
 
 纯 Python 3 标准库实现, 直接基于 Linux /proc, /sys 和内置 ctypes 机制访问底层硬件:
@@ -90,7 +83,7 @@ import glob
 import os
 import pwd
 import time
-# [Inlined ai_inspector]
+# [Inlined ai]
 
 # =====================================================================
 # 1. 通用 CPU 拓扑与遥测
@@ -741,10 +734,7 @@ class UniversalProcesses:
             procs.sort(key=lambda x: x["comm"].lower())
         return procs
 
-
-# =====================================================================
-# SECTION 3: ZENMON TUI APPLICATION ENGINE
-# =====================================================================
+# SECTION 3
 """zenmon.app: 极简低墨水比交互式 TUI 监控引擎 (ZenMon TUI Application).
 
 设计哲学 (Claude Minimal Paradigm):
@@ -761,7 +751,7 @@ import signal
 import sys
 import time
 # [Inlined hal]
-# [Inlined ai_inspector]
+# [Inlined ai]
 
 # ===== 默认调优参数 =====
 PSU_WATTS_DEFAULT = 550.0
@@ -1520,6 +1510,162 @@ class ZenMonApp:
     # -----------------------------------------------------------------
     # 弹窗渲染: 帮助模态框 & 进程详情
     # -----------------------------------------------------------------
+    def render_classic(self, win, snap, my, mx):
+        CW, CH = 84, 28
+        if my < CH or mx < CW:
+            safe_addstr(win, 0, 0, f"Resize terminal to {CW}x{CH} (Current: {mx}x{my})", P_WARN)
+            return
+
+        ox = max(0, (mx - CW) // 2)
+        oy = max(0, (my - CH) // 2)
+
+        def cs_safe(y, x, s, pair=P_LABEL, bold=False):
+            safe_addstr(win, y + oy, x + ox, s, pair, bold)
+
+        host = snap["hostname"]
+        up = snap["uptime"]
+        cs_safe(0, 0, "SYSTEM TELEMETRY ✦ " + host, P_LABEL)
+        cs_safe(0, CW - len("UPTIME: %s" % up), "UPTIME: %s" % up, P_VALUE)
+        cs_safe(1, 0, "━" * CW, P_LABEL)
+
+        total_pw = snap["total_power"]
+        frac = (total_pw / self.psu_watts) if self.psu_watts else 0.0
+        frac = max(0.0, min(1.0, frac))
+        remain = max(0.0, self.psu_watts - total_pw)
+        hpre = "PSU BUDGET [%gW] " % self.psu_watts
+        hsuf = " %.1fW  |  REMAIN: %.1fW" % (total_pw, remain)
+        hbw = max(10, min(70, CW - len(hpre) - len(hsuf)))
+        full = int(round(frac * hbw))
+        empty = hbw - full
+        dyn_color = pow_pair(frac)
+        cs_safe(2, 0, hpre, PAIR_DIM_TRACK, bold=True)
+        cs_safe(2, len(hpre), MICRO_FILL * full, dyn_color)
+        cs_safe(2, len(hpre) + full, MICRO_EMPTY * empty, PAIR_DIM_TRACK)
+        cs_safe(2, len(hpre) + full + empty, hsuf, dyn_color)
+        cs_safe(3, 0, "━" * CW, P_LABEL)
+
+        PANEL_W = 40
+        GAP = 4
+        LX = 0
+        RX = PANEL_W + GAP
+
+        gpu = snap["gpu"]
+        gname = (gpu["name"] if gpu else "N/A")[:PANEL_W - 16]
+        cs_safe(4, LX, "COMPUTE [CPU]", P_LABEL, True)
+        cs_safe(4, RX, "ACCELERATOR [%s]" % gname, P_LABEL, True)
+
+        cpu_u = snap["cpu_usage"]
+        cs_safe(5, LX, "Util  ", P_LABEL)
+        cs_safe(5, LX + 8, make_micro_bar(cpu_u, 100.0), util_pair(cpu_u))
+        cs_safe(5, LX + 18, "%22.1f%%" % cpu_u, util_pair(cpu_u))
+
+        gu = gpu["util"] if gpu else 0.0
+        cs_safe(5, RX, "Util  ", P_LABEL)
+        cs_safe(5, RX + 8, make_micro_bar(gu, 100.0), util_pair(gu))
+        cs_safe(5, RX + 18, "%22.1f%%" % gu, util_pair(gu))
+
+        tctl = snap["sensors"]["tctl"]
+        cs_safe(6, LX, "Temp  ", P_LABEL)
+        cs_safe(6, LX + 8, make_micro_bar(tctl, 100.0), temp_pair(tctl))
+        cs_safe(6, LX + 18, "%22.1f°C" % tctl, temp_pair(tctl))
+
+        gt = gpu["temp"] if gpu else 0.0
+        cs_safe(6, RX, "Temp  ", P_LABEL)
+        cs_safe(6, RX + 8, make_micro_bar(gt, 100.0), temp_pair(gt))
+        cs_safe(6, RX + 18, "%22.1f°C" % gt, temp_pair(gt))
+
+        cpu_pw = snap["cpu_power"] or 0.0
+        cs_safe(7, LX, "Pwr   ", P_LABEL)
+        cs_safe(7, LX + 8, make_micro_bar(cpu_pw / 150.0 * 100.0, 100.0), pow_pair(cpu_pw / 150.0))
+        cs_safe(7, LX + 18, "%22.1fW" % cpu_pw, pow_pair(cpu_pw / 150.0))
+
+        gp = gpu["power"] if gpu else 0.0
+        cs_safe(7, RX, "Pwr   ", P_LABEL)
+        cs_safe(7, RX + 8, make_micro_bar(gp / 200.0 * 100.0, 100.0), pow_pair(gp / 200.0))
+        cs_safe(7, RX + 18, "%22.1fW" % gp, pow_pair(gp / 200.0))
+
+        load = snap["load"]
+        load_str = "%5.2f %5.2f %5.2f" % (float(load[0]), float(load[1]), float(load[2]))
+        freq_str = "32C @ %dMHz" % (sum(snap["freqs"]) // 32 if snap["freqs"] else 0)
+        cs_safe(8, LX, "Load  ", P_LABEL)
+        cs_safe(8, LX + 8, "%16s" % load_str, P_VALUE)
+        cs_safe(8, LX + 24, "%16s" % freq_str, P_VALUE)
+
+        fan_str = ("%5.0f RPM" % gpu["fan"]) if (gpu and gpu["fan"] > 0) else "N/A"
+        cs_safe(8, RX, "Fan   ", P_LABEL)
+        cs_safe(8, RX + 18, "%22s" % fan_str, P_VALUE)
+
+        cs_safe(9, LX, "Cores ", P_LABEL)
+        c_spark = "".join(RAMP[min(7, int(c / 12.5))] for c in snap["cores"][:32])
+        cs_safe(9, LX + 8, c_spark[:32], P_VALUE)
+
+        if gpu:
+            mf = gpu["mem_used"] / gpu["mem_total"] if gpu["mem_total"] else 0.0
+            cs_safe(9, RX, "VRAM  ", P_LABEL)
+            cs_safe(9, RX + 8, make_micro_bar(mf * 100.0, 100.0), P_VALUE)
+            cs_safe(9, RX + 18, "%22s" % ("%.1f / %.1fG" % (gpu["mem_used"] / 1024.0, gpu["mem_total"] / 1024.0)), P_VALUE)
+
+        cs_safe(10, 0, "━" * CW, P_LABEL)
+        cs_safe(11, LX, "MEMORY & NETWORK", P_LABEL, True)
+        cs_safe(11, RX, "MOTHERBOARD & SENSORS", P_LABEL, True)
+
+        m = snap["mem"]
+        cs_safe(12, LX, "RAM   ", P_LABEL)
+        cs_safe(12, LX + 8, make_micro_bar(m["pct"], 100.0), util_pair(m["pct"]))
+        cs_safe(12, LX + 18, "%22s" % ("%.1fG / %.1fG" % (m["used_gb"], m["total_gb"])), util_pair(m["pct"]))
+
+        cs_safe(13, LX, "SWP   ", P_LABEL)
+        cs_safe(13, LX + 8, make_micro_bar(m["swap_pct"], 100.0), P_WARN if m["swap_pct"] > 50 else P_DIM)
+        cs_safe(13, LX + 18, "%22s" % ("%.1fG / %.1fG" % (m["swap_used_gb"], m["swap_total_gb"])), P_VALUE)
+
+        cs_safe(14, LX, "NET   ", P_LABEL)
+        rx_r, tx_r = snap["net_rx"], snap["net_tx"]
+        cs_safe(14, LX + 8, make_micro_bar((rx_r + tx_r) / (50*1024*1024)*100, 100.0), P_DIM)
+        cs_safe(14, LX + 18, "%22s" % ("▲ %s ▼ %s" % (fmt_rate(rx_r), fmt_rate(tx_r))), P_VALUE)
+
+        nv = snap["sensors"]["nvme"]
+        cs_safe(12, RX, "NVMe  ", P_LABEL)
+        cs_safe(12, RX + 8, make_micro_bar(nv, 100.0), temp_pair(nv))
+        cs_safe(12, RX + 18, "%22.1f°C" % nv, temp_pair(nv))
+
+        mobo = snap["sensors"]["mobo"]
+        if len(mobo) > 1:
+            cs_safe(13, RX, "%-6s" % mobo[1][0], P_LABEL)
+            cs_safe(13, RX + 8, make_micro_bar(mobo[1][1], 100.0), temp_pair(mobo[1][1]))
+            cs_safe(13, RX + 18, "%22.1f°C" % mobo[1][1], temp_pair(mobo[1][1]))
+        if len(mobo) > 2:
+            cs_safe(14, RX, "%-6s" % mobo[2][0], P_LABEL)
+            cs_safe(14, RX + 8, make_micro_bar(mobo[2][1], 100.0), temp_pair(mobo[2][1]))
+            cs_safe(14, RX + 18, "%22.1f°C" % mobo[2][1], temp_pair(mobo[2][1]))
+
+        cs_safe(15, 0, "━" * CW, P_LABEL)
+
+        cs_safe(16, LX, "PROCESSES  (Sorted by %s%%)" % self.sort_mode.upper(), P_LABEL, True)
+        cs_safe(17, LX, "  PID  USER       PRI  NI   VIRT    RES  %CPU  %MEM                 COMMAND", P_LABEL)
+        procs = self.collector.get_procs(self.sort_mode)
+        for i in range(min(6, len(procs))):
+            p = procs[i]
+            line = "  %5s  %-10s %3s %3s %6s %6s %5.1f %5.1f  %20s" % (
+                p["pid"], p["user"][:10], p["pri"], p["ni"],
+                fmt_kb(p["virt"]), fmt_kb(p["res"]), p["cpu"], p["mem"],
+                p["cmd"][:20])
+            cs_safe(18 + i, LX, line, P_VALUE)
+
+        cs_safe(25, 0, "┄" * CW, P_LABEL)
+        cs_safe(25, LX, " GPU MAX-LOAD PROXY ", P_LABEL)
+        gpu_procs = gpu.get("procs", []) if gpu else []
+        if gpu_procs:
+            gp = gpu_procs[0]
+            gp_line = "  %5s  %-10s %3s %3s %6s %6s %5.1f %5s  %20s" % (
+                gp["pid"], "app", "-", "-", "-", "-",
+                0.0, "%.1fG" % (gp["mem_mb"] / 1024.0), base_cmd(gp["name"]))
+            cs_safe(26, LX, gp_line, P_VALUE)
+
+        cs_safe(27, 0, "━" * CW, P_LABEL)
+        sudo_str = "Elevated" if self.collector.is_root else "Restricted"
+        footer = f"[Classic] [q]Quit [s]Sort [c]ProMode [sudo]{sudo_str} {self.refresh:.1f}s"
+        cs_safe(28, LX, footer, P_LABEL)
+
     def render_help_modal(self, win, my, mx):
         cw, ch, ox, oy = self._get_layout_geometry(my, mx, COMPACT_WIDTH, COMPACT_HEIGHT)
         mw, mh = min(74, cw - 4), min(21, ch - 2)
@@ -1610,18 +1756,21 @@ class ZenMonApp:
 
             stdscr.erase()
 
-            if self.current_view == 0:
-                self.render_dashboard(stdscr, snap, my, mx)
-            elif self.current_view == 1:
-                self.render_cpu_matrix(stdscr, snap, my, mx)
-            elif self.current_view == 2:
-                self.render_gpu_deepdive(stdscr, snap, my, mx)
-            elif self.current_view == 3:
-                self.render_storage_net(stdscr, snap, my, mx)
-            elif self.current_view == 4:
-                self.render_proc_manager(stdscr, snap, my, mx)
-            elif self.current_view == 5:
-                self.render_waveforms(stdscr, snap, my, mx)
+            if self.is_classic:
+                self.render_classic(stdscr, snap, my, mx)
+            else:
+                if self.current_view == 0:
+                    self.render_dashboard(stdscr, snap, my, mx)
+                elif self.current_view == 1:
+                    self.render_cpu_matrix(stdscr, snap, my, mx)
+                elif self.current_view == 2:
+                    self.render_gpu_deepdive(stdscr, snap, my, mx)
+                elif self.current_view == 3:
+                    self.render_storage_net(stdscr, snap, my, mx)
+                elif self.current_view == 4:
+                    self.render_proc_manager(stdscr, snap, my, mx)
+                elif self.current_view == 5:
+                    self.render_waveforms(stdscr, snap, my, mx)
 
             # 浮层与交互弹窗
             cw, ch, ox, oy = self._get_layout_geometry(my, mx, COMPACT_WIDTH, COMPACT_HEIGHT)
@@ -1720,6 +1869,13 @@ class ZenMonApp:
             elif ch_key == ord("/"):
                 self.filter_prompt = True
                 self.filter_buffer = self.filter_text
+            elif ch_key in (ord("c"), ord("C")):
+                self.is_classic = not self.is_classic
+                self.set_toast("Switched to Classic Mode" if self.is_classic else "Switched to Pro Mode")
+            elif ch_key in (9, ord("\t")) or (ch_key == curses.KEY_RIGHT and self.current_view != 4):
+                self.current_view = (self.current_view + 1) % 6
+            elif ch_key == curses.KEY_BTAB or (ch_key == curses.KEY_LEFT and self.current_view != 4):
+                self.current_view = (self.current_view - 1) % 6
             elif ch_key in (ord("0"), ord("1"), ord("2"), ord("3"), ord("4"), ord("5")):
                 self.current_view = int(chr(ch_key))
             elif ch_key == curses.KEY_UP:
@@ -1734,10 +1890,7 @@ class ZenMonApp:
             elif ch_key in (ord("k"), ord("K")):
                 self.kill_prompt = True
 
-
-# =====================================================================
-# SECTION 4: CLI ENTRYPOINT
-# =====================================================================
+# SECTION 4
 """zenmon CLI 启动入口与参数解析器."""
 import argparse
 import curses
@@ -1801,4 +1954,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
