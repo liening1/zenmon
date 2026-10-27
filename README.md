@@ -41,9 +41,9 @@
 │ NVMeIO R:  0.2M W: 14.8M (320 IOPS)       Fans   fan1:1250RPM fan2:980RPM              │
 │ ── TOP PROCESSES (Sorted by CPU) ──────── [✦ AI Workloads Tagged] ──────────────────── │
 │    PID   USER       PRI  NI   VIRT    RES   %CPU  %MEM   COMMAND                           │
-│  12842  quantum1   20   0  14.2G  11.4G  158.4  37.4   ✦[Ollama] ollama serve            │
-│  24891  quantum1   20   0   4.8G   2.1G   42.5   6.8   ✦[vLLM] python -m vllm.entrypoints│
-│   2471  quantum1   20   0   1.8G   890M   18.2   2.9   ✦[PyTorch] python train.py        │
+│  12842  yusheng    20   0  14.2G  11.4G  158.4  37.4   ✦[Ollama] ollama serve            │
+│  24891  yusheng    20   0   4.8G   2.1G   42.5   6.8   ✦[vLLM] python -m vllm.entrypoints│
+│   2471  yusheng    20   0   1.8G   890M   18.2   2.9   ✦[PyTorch] python train.py        │
 │  GPU PROXY  PID:12842  ollama_llama_server  VRAM:11640MiB  ✦ [Ollama]                  │
 │ [0:Main] 1:CPU 2:GPU 3:IO 4:Proc 5:Wave | [sudo]Root 1.0s [p]Snapshot [w]Wide [?]Help  │
 └────────────────────────────────────────────────────────────────────────────────────────┘
