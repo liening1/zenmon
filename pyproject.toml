@@ -10,7 +10,7 @@ readme = "README.md"
 requires-python = ">=3.8"
 license = {text = "MIT"}
 authors = [
-    {name = "ZenMon Contributors"}
+    {name = "Yusheng Shi", email = "140299511+liening1@users.noreply.github.com"}
 ]
 keywords = ["system-monitor", "telemetry", "tui", "curses", "gpu", "cuda", "vram", "ai", "llm", "htop", "btop"]
 classifiers = [
